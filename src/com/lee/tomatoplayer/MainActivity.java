@@ -4,18 +4,25 @@ package com.lee.tomatoplayer;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
-
+	
+	public static boolean outPlayer = false;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.welcome);
 		// sleep  显示欢迎界面再跳入播放器  待做
-		Intent intent = new Intent(MainActivity.this, player.class);
-		startActivity(intent);
+		if(outPlayer == false){
+			Intent intent = new Intent(MainActivity.this, player.class);
+			startActivity(intent);
+		}
+
 	}
 
 	@Override
@@ -35,5 +42,14 @@ public class MainActivity extends Activity {
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+	
+	// 按返回键时杀死整个进程
+	public boolean onKeyDown(int keyCode ,KeyEvent event){
+		if(keyCode == KeyEvent.KEYCODE_BACK ){
+			System.exit(0);  
+			return true;  
+		}
+		return super.onKeyDown(keyCode, event);
 	}
 }
