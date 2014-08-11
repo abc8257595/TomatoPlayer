@@ -10,6 +10,27 @@
         android:id="@+id/vv_videoview"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"/>
+    
+    <ImageView
+	    android:id="@+id/littleAD"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:adjustViewBounds="true"
+	    android:maxHeight="400dp"
+	    android:maxWidth="400dp"
+	    android:layout_gravity="right"
+	    android:alpha="0.9"
+	    android:src="@drawable/ic_launcher" 
+	    android:visibility="visible"     />
+    
+        <ImageView
+	    android:id="@+id/bigAD"
+	    android:layout_width="fill_parent"
+	    android:layout_height="400dp"
+	    android:scaleType="fitCenter"
+	    android:layout_gravity="center"
+	    android:src="@drawable/ic_launcher" 
+	    android:visibility="visible"     />
 
 	<LinearLayout
 	    android:id="@+id/progressBar"
@@ -50,9 +71,6 @@
 	        android:gravity="center"
 	        android:textColor="#FFFFFF"
 	        android:text="10:00" />
-
 	</LinearLayout>
-
-"
 
 </FrameLayout>
