@@ -2,7 +2,6 @@ package com.lee.tomatoplayer;
 
 import java.util.Timer;
 import java.util.TimerTask;
-
 import android.app.ActionBar;
 import android.app.Activity;
 import android.media.MediaPlayer;
@@ -29,6 +28,7 @@ public class player extends Activity {
 	private LinearLayout progressBar;
 	private VideoView vv_video;
 	private boolean isPlaying;
+	private boolean firstPlay;
 	private ActionBar mActionBar;
 	private long waitTime = 2000;  
 	private long touchTime = 0;  
@@ -38,7 +38,6 @@ public class player extends Activity {
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
@@ -48,85 +47,74 @@ public class player extends Activity {
 
 		seekBar = (SeekBar) findViewById(R.id.seekBar);
 		vv_video = (VideoView) findViewById(R.id.vv_videoview);
-		progressBar = (LinearLayout) findViewById(R.id.progressBar);
-		duration = (TextView) findViewById(R.id.duration);
-		currentTime = (TextView) findViewById(R.id.currentTime);
-		playBtn = (ImageView) findViewById(R.id.playBtn);
+		progressBar = (LinearLayout) findViewById(R.id.progressBar);   // 整个LinearLayout 含暂停、时间、进度条
+		playBtn = (ImageView) findViewById(R.id.playBtn);				// 进度条上的播放图标
+		duration = (TextView) findViewById(R.id.duration);			   // 总时长 
+		currentTime = (TextView) findViewById(R.id.currentTime);		// 当前播放点
 
 		// prepare提前载入流媒体url地址
+		Log.i(TAG, " 获取视频文件地址");
 		prepare("http://202.104.110.178:8080/video/genius.mp4");
-		play(0);
+		
+		// 第一次播放标志位
+		firstPlay = true;
 		
 	}
 	
-	protected void prepare(String path){
-		Log.i(TAG, " 获取视频文件地址");
-		//path = "http://202.104.110.178:8080/video/genius.mp4";
+	// 预设置播放路径
+	private void prepare(String path){
 		
 		Log.i(TAG, "指定视频源路径");
 		vv_video.setVideoPath(path);//file.getAbsolutePath()
 		
 	}
 	
+	// 时间从数字转字符串
+	private String timeToStr(int mileSec){
+		String s_time = String.valueOf(mileSec / 1000 / 60 / 10) + 
+				   		String.valueOf(mileSec / 1000 / 60 % 10) +
+				   		":" +
+				   		String.valueOf(mileSec / 1000 % 60 / 10) +
+				   		String.valueOf(mileSec / 1000 % 60 % 10);
+		return s_time;
+	}
+	
 	protected void play(int msec) {
 
-		Log.i(TAG, "开始播放");
 		vv_video.start();
 		
 		// 按照初始位置播放
 		vv_video.seekTo(msec);
 		// 设置进度条的最大进度为视频流的最大播放时长
-		seekBar.setMax(vv_video.getDuration());
-		String s_duration = String.valueOf(vv_video.getDuration() / 1000 / 60) + ":" +
-							String.valueOf(vv_video.getDuration() / 1000 % 60);
-		duration.setText(s_duration);
+		seekBar.setMax(vv_video.getDuration());  
 		
-		int current = vv_video.getCurrentPosition();
-		String s_current = String.valueOf(current / 1000 / 60) + ":" +
-				String.valueOf(current / 1000 % 60);
-		currentTime.setText(s_current);
-		
-		// 开始线程，更新进度条的刻度
+		// 计时器，500ms更新一次进度条的刻度
 		mTimer = new Timer(); 
 		mTimerTask = new TimerTask() {
 			public void run() {
-				int current = vv_video.getCurrentPosition();
-				seekBar.setProgress(current);
+				seekBar.post(new Runnable() {	
+					public void run() {
+						int current = vv_video.getCurrentPosition();
+						int dur = vv_video.getDuration();
+						duration.setText(timeToStr(dur));
+						currentTime.setText(timeToStr(current));
+						seekBar.setProgress(current);
+					}
+				});
 			}
 		};
 		mTimer.schedule(mTimerTask, 0, 500);
-		
-//		new Thread() {
-//			@Override
-//			public void run() {
-//				try {
-//					isPlaying = true;			
-//					while (isPlaying) {
-//						// 如果正在播放，没0.5.毫秒更新一次进度条
-//						int current = vv_video.getCurrentPosition();
-//						seekBar.setProgress(current);
-////						String s_current = String.valueOf(current / 1000 / 60) + ":" +
-////								String.valueOf(current / 1000 % 60);
-////						currentTime.setText("test");
-//						sleep(500);
-//					}
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
-//			}
-//		}.start();
 
+		// 播放完了 结束
 		vv_video.setOnCompletionListener(new OnCompletionListener() {
-			@Override
 			public void onCompletion(MediaPlayer mp) {
-
+				finish();
 			}
 		});
-
+		
+		// 发生错误重新播放
 		vv_video.setOnErrorListener(new OnErrorListener() {
-			@Override
 			public boolean onError(MediaPlayer mp, int what, int extra) {
-				// 发生错误重新播放
 				play(0);
 				isPlaying = false;
 				return false;
@@ -134,6 +122,7 @@ public class player extends Activity {
 		});
 	}
 	
+	// 重新播放
 	protected void replay() {
 		if (vv_video != null && vv_video.isPlaying()) {
 			vv_video.seekTo(0);
@@ -144,6 +133,7 @@ public class player extends Activity {
 		play(0);
 	}
 	
+	// 停止播放
 	protected void stop() {
 		if (vv_video != null && vv_video.isPlaying()) {
 			vv_video.stopPlayback();
@@ -151,6 +141,7 @@ public class player extends Activity {
 		}
 	}
 	
+	// 响应遥控器  定义了中键 上下左右 返回
 	public boolean onKeyDown(int keyCode ,KeyEvent event){
 		
 		if(event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_CENTER ){
@@ -159,9 +150,15 @@ public class player extends Activity {
 				playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_pause)));
 				progressBar.setVisibility(View.VISIBLE);
 			} else{
-				vv_video.start();
-				playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_play)));
-				progressBar.setVisibility(View.INVISIBLE);
+				if(firstPlay){
+					play(0);
+					firstPlay = false;
+				}else{
+					vv_video.start();
+					playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_play)));
+					progressBar.setVisibility(View.INVISIBLE);
+				}
+				
 			}
 			Log.i(TAG, " 按下中键");
 			return true;
@@ -170,24 +167,28 @@ public class player extends Activity {
 			int current = vv_video.getCurrentPosition();
 			play(current - 5000);
 			progressBar.setVisibility(View.VISIBLE);
+			playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_play)));
 			Log.i(TAG, " 按下左键");
 		}
 		if(event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_RIGHT ){
 			int current = vv_video.getCurrentPosition();
 			play(current + 5000);
 			progressBar.setVisibility(View.VISIBLE);
+			playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_play)));
 			Log.i(TAG, " 按下右键");
 		}
 		if(keyCode == 765 ){			
 			int current = vv_video.getCurrentPosition();
 			play(current + 1000);
 			progressBar.setVisibility(View.VISIBLE);
+			playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_play)));
 			Log.i(TAG, " 飞梭右");
 		}
 		if(keyCode == 764 ){
 			int current = vv_video.getCurrentPosition();
 			play(current - 1000);
 			progressBar.setVisibility(View.VISIBLE);
+			playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_play)));
 			Log.i(TAG, " 飞梭左");
 		}
 		if(keyCode == KeyEvent.KEYCODE_BACK ){
