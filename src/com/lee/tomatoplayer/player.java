@@ -12,6 +12,7 @@ import org.apache.http.util.EntityUtils;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
@@ -119,7 +120,8 @@ public class player extends Activity {
         
 		// prepare提前载入流媒体url地址
 		Log.i(TAG, " 获取视频文件地址");
-		prepare("http://202.104.110.178:8080/video/天才.mp4");
+		Intent intent =getIntent();
+		prepare(intent.getStringExtra("url"));
 		
 		// 第一次播放标志位
 		firstPlay = true;

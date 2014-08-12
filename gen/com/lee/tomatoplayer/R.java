@@ -22,20 +22,35 @@ public final class R {
         public static final int activity_vertical_margin=0x7f040001;
     }
     public static final class drawable {
-        public static final int ic_launcher=0x7f020000;
-        public static final int ic_media_pause=0x7f020001;
-        public static final int ic_media_play=0x7f020002;
+        public static final int bigbang_big=0x7f020000;
+        public static final int bigbang_small=0x7f020001;
+        public static final int fromstar_big=0x7f020002;
+        public static final int fromstar_small=0x7f020003;
+        public static final int frozen_big=0x7f020004;
+        public static final int frozen_small=0x7f020005;
+        public static final int gravity_big=0x7f020006;
+        public static final int gravity_small=0x7f020007;
+        public static final int ic_launcher=0x7f020008;
+        public static final int ic_media_pause=0x7f020009;
+        public static final int ic_media_play=0x7f02000a;
+        public static final int laputa_big=0x7f02000b;
+        public static final int laputa_small=0x7f02000c;
+        public static final int transformer_big=0x7f02000d;
+        public static final int transformer_small=0x7f02000e;
+        public static final int walle_big=0x7f02000f;
+        public static final int walle_small=0x7f020010;
     }
     public static final class id {
-        public static final int action_settings=0x7f080009;
+        public static final int action_settings=0x7f08000a;
         public static final int bigAD=0x7f080002;
         public static final int currentTime=0x7f080005;
         public static final int duration=0x7f080007;
+        public static final int filmImage=0x7f080009;
+        public static final int gallery=0x7f080008;
         public static final int littleAD=0x7f080001;
         public static final int playBtn=0x7f080004;
         public static final int progressBar=0x7f080003;
         public static final int seekBar=0x7f080006;
-        public static final int textView1=0x7f080008;
         public static final int vv_videoview=0x7f080000;
     }
     public static final class layout {
@@ -78,4 +93,25 @@ public final class R {
          */
         public static final int AppTheme=0x7f060001;
     }
+    public static final class styleable {
+        /** Attributes that can be used with a Gallery1.
+           <p>Includes the following attributes:</p>
+           <table>
+           <colgroup align="left" />
+           <colgroup align="left" />
+           <tr><th>Attribute</th><th>Description</th></tr>
+           <tr><td><code>{@link #Gallery1_android_galleryItemBackground android:galleryItemBackground}</code></td><td></td></tr>
+           </table>
+           @see #Gallery1_android_galleryItemBackground
+         */
+        public static final int[] Gallery1 = {
+            0x0101004c
+        };
+        /**
+          <p>This symbol is the offset where the {@link android.R.attr#galleryItemBackground}
+          attribute's value can be found in the {@link #Gallery1} array.
+          @attr name android:galleryItemBackground
+        */
+        public static final int Gallery1_android_galleryItemBackground = 0;
+    };
 }
