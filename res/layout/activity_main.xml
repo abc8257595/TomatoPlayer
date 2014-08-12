@@ -25,10 +25,12 @@
     
         <ImageView
 	    android:id="@+id/bigAD"
-	    android:layout_width="fill_parent"
-	    android:layout_height="400dp"
+	    android:layout_width="975dp"
+	    android:layout_height="550dp"
 	    android:scaleType="fitCenter"
 	    android:layout_gravity="center"
+	    android:padding="2dp"
+	    android:background="#BBFFFFFF"
 	    android:src="@drawable/ic_launcher" 
 	    android:visibility="visible"     />
 
@@ -46,28 +48,30 @@
 	        android:contentDescription="Play or Pause"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
-	        android:src="@android:drawable/ic_media_play" />
+	        android:src="@android:drawable/ic_media_pause" />
 
 	    <TextView
 	        android:id="@+id/currentTime"
-	        android:layout_width="35dp"
+	        android:layout_width="40dp"
 	        android:layout_height="match_parent"
-	        android:textSize="14sp"
+	        android:layout_weight="0.02"
 	        android:gravity="center"
+	        android:text="00:00"
 	        android:textColor="#FFFFFF"
-	        android:text="00:00" />
+	        android:textSize="16sp" />
 
 	    <SeekBar
 	        android:id="@+id/seekBar"
 	        android:layout_width="0dp"
 	        android:layout_height="wrap_content"
-	        android:layout_weight="0.94" />
+	        android:layout_weight="0.92" />
 
 	    <TextView
 	        android:id="@+id/duration"
-	        android:layout_width="35dp"
+	        android:layout_width="40dp"
 	        android:layout_height="match_parent"
-	        android:textSize="14sp"
+	        android:layout_weight="0.02"
+	        android:textSize="16sp"
 	        android:gravity="center"
 	        android:textColor="#FFFFFF"
 	        android:text="10:00" />

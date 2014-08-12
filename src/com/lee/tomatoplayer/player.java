@@ -11,12 +11,14 @@ import org.apache.http.util.EntityUtils;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -30,17 +32,24 @@ import android.widget.VideoView;
 
 public class player extends Activity {
 	private final String TAG = "main";
+	private final int IS_PAUSE = 1;
+	private final int PLAY_TO = 2;
+	private final int IS_CONTINUE = 3;
+	private final int FIRST_PLAY = 4;
+	private final int SEEKBAR_CHANGE = 5;
+	
 	private SeekBar seekBar;
 	private TextView duration;
 	private TextView currentTime;
-	private ImageView playBtn;
+	private static ImageView playBtn;
+	private ProgressDialog dialog;
 	
-	private LinearLayout progressBar;
+	private static LinearLayout progressBar;
 	private VideoView vv_video;
 	private boolean isPlaying;
 	private boolean firstPlay;
 	private ActionBar mActionBar;
-	private long waitTime = 2000;  
+	private long waitTime = 5000;  
 	private long touchTime = 0;  
 	
 	private Timer mTimer; 
@@ -53,6 +62,8 @@ public class player extends Activity {
 	private int litAdTime; 
 	private int AdLastTime;
 	private int AdAlpha = 100;
+	
+    private static Handler handler ;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -72,15 +83,49 @@ public class player extends Activity {
 		littleAD = (ImageView) findViewById(R.id.littleAD); 			// 小广告弹窗
 		bigAD = (ImageView) findViewById(R.id.bigAD); 			// 大广告弹窗
 		
+		// 专门用于控制主线程的UI组件
+		handler = new Handler() {
+	        // TODO
+	        public void handleMessage(android.os.Message msg) {
+	            if (msg.what == PLAY_TO) {
+	        		progressBar.setVisibility(View.VISIBLE);
+	        		bigAD.setVisibility(View.INVISIBLE);
+	        		playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_play)));
+	            } else if(msg.what == IS_PAUSE){
+	            	progressBar.setVisibility(View.VISIBLE);
+					playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_pause)));
+					bigAD.setImageBitmap(bigAdPic);
+					bigAD.setVisibility(View.VISIBLE);
+					littleAD.setVisibility(View.GONE);
+	            }else if(msg.what == IS_CONTINUE){
+	            	progressBar.setVisibility(View.INVISIBLE);
+					playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_play)));
+					bigAD.setVisibility(View.INVISIBLE);
+	            }else if(msg.what == FIRST_PLAY){
+	            	playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_play)));
+	        	}else if(msg.what == SEEKBAR_CHANGE){
+	        		seekBar.setProgress(vv_video.getCurrentPosition());
+	        	}
+	        };
+	    };
+		
+	    // 开始的提示框
+        dialog = new ProgressDialog(this);
+        dialog.setTitle("稍候");
+        dialog.setMessage("正在不要命地装载中...");
+        dialog.setCancelable(false);
+        
+        dialog.show();
+        
 		// prepare提前载入流媒体url地址
 		Log.i(TAG, " 获取视频文件地址");
-		prepare("http://202.104.110.178:8080/video/剪切.mp4");
+		prepare("http://202.104.110.178:8080/video/天才.mp4");
 		
 		// 第一次播放标志位
 		firstPlay = true;
 		
 		// 广告设置位
-		litAdTime = 5000;
+		litAdTime = 10000;
 		AdLastTime = 5000;
 		//AdAlpha = 50;
 	}
@@ -88,18 +133,20 @@ public class player extends Activity {
 	// 预设置播放路径
 	private void prepare(String path){
 		
-		Log.i(TAG, "指定视频源路径");
-		vv_video.setVideoPath(path);//file.getAbsolutePath()
-		
+		final String path_tmp = path;
 		littleAD.setVisibility(View.INVISIBLE);
 		bigAD.setVisibility(View.INVISIBLE);
 		
 		new Thread(new Runnable() {
 			public void run() {
+				Log.i(TAG, "指定视频源路径");
+				vv_video.setVideoPath(path_tmp);
 				smallAdPic = loadImageFromNetwork("http://202.104.110.178:8080/picture/small.png");
-				bigAdPic = loadImageFromNetwork("http://202.104.110.178:8080/picture/big.png");
+				bigAdPic = loadImageFromNetwork("http://202.104.110.178:8080/picture/big.jpg");
+				dialog.dismiss();
 			}
 		}).start();
+		
 	}
 	
 	// 时间从数字转字符串
@@ -132,14 +179,15 @@ public class player extends Activity {
 		return bitmap;
 	}
 	
+	// 跳转到某一msec时刻
 	protected void playTo(int msec){
+		// TODO
 		vv_video.seekTo(msec);
-		progressBar.setVisibility(View.VISIBLE);
-		playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_play)));
+		handler.sendEmptyMessage(PLAY_TO);
 	}
 	
+	// 播放影片进程，包含进度条更新、时间更新
 	protected void play(int msec) {
-
 		vv_video.start();
 		
 		// 按照初始位置播放
@@ -151,13 +199,21 @@ public class player extends Activity {
 		mTimer = new Timer(); 
 		mTimerTask = new TimerTask() {
 			public void run() {
-				seekBar.post(new Runnable() {	
-					public void run() {
-						int current = vv_video.getCurrentPosition();
+				
+				handler.sendEmptyMessage(SEEKBAR_CHANGE);
+//				seekBar.post(new Runnable() {	
+//					public void run() {
+//						int current = vv_video.getCurrentPosition();
+//						seekBar.setProgress(current);
+//					}
+//				});
+				
+				currentTime.post(new Runnable(){
+					public void run(){
 						int dur = vv_video.getDuration();
+						int current = vv_video.getCurrentPosition();
 						duration.setText(timeToStr(dur));
 						currentTime.setText(timeToStr(current));
-						seekBar.setProgress(current);
 					}
 				});
 				
@@ -172,45 +228,19 @@ public class player extends Activity {
 							littleAD.setAlpha(AdAlpha);
 						} else{
 							AdAlpha -= 40;
-							if(AdAlpha <= 0) AdAlpha = 0;
+							if(AdAlpha <= 0) {
+								AdAlpha = 0;
+								littleAD.setVisibility(View.GONE);
+							}
 							littleAD.setAlpha(AdAlpha);
 						}
 					}
 				}); 
 				
-//				bigAD.post(new Runnable(){
-//					public void run(){
-//						bigAD.setImageBitmap(bigAdPic);
-//					}
-//				});
 			}
 		}; 
 		// 每500ms执行一次定时器任务
 		mTimer.schedule(mTimerTask, 0, 500);
-		
-//		new Thread(new Runnable() {
-//			@Override
-//			public void run() {
-//				final Bitmap btm=loadImageFromNetwork("http://202.104.110.178:8080/picture/small.png");
-//				littleAD.post(new Runnable() {
-//					public void run() {
-//						if(vv_video.getCurrentPosition() > litAdTime && 
-//								   vv_video.getCurrentPosition() < (litAdTime + AdLastTime)	){
-//									littleAD.setVisibility(View.VISIBLE);
-//									littleAD.setImageBitmap(btm);
-//									//AdAlpha += 20;
-//									//if(AdAlpha >=250 ) AdAlpha = 250 ;
-//									//littleAD.setAlpha(AdAlpha);
-//								} else{
-//									//AdAlpha -= 20;
-//									//if(AdAlpha <= 0) AdAlpha = 0;
-//									//littleAD.setAlpha(AdAlpha);
-//									littleAD.setVisibility(View.INVISIBLE);
-//								}
-//					}
-//				});
-//			}
-//		}).start();
 
 		// 播放完了 结束
 		vv_video.setOnCompletionListener(new OnCompletionListener() {
@@ -250,27 +280,22 @@ public class player extends Activity {
 	
 	// 响应遥控器  定义了中键 上下左右 返回
 	public boolean onKeyDown(int keyCode ,KeyEvent event){
-		
+		// 按下中键
 		if(event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_CENTER ){
 			if(vv_video.isPlaying()){
 				vv_video.pause();
-				playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_pause)));
-				progressBar.setVisibility(View.VISIBLE);
-				//bigAD.setVisibility(View.VISIBLE);
+				handler.sendEmptyMessage(IS_PAUSE);
 			} else{
 				if(firstPlay){
 					play(0);
 					firstPlay = false;
+					handler.sendEmptyMessage(FIRST_PLAY);
 				}else{
 					vv_video.start();
-					playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_play)));
-					progressBar.setVisibility(View.INVISIBLE);
-					//bigAD.setVisibility(View.INVISIBLE);
+					handler.sendEmptyMessage(IS_CONTINUE);
 				}
-				
 			}
 			Log.i(TAG, " 按下中键");
-			return true;
 		}
 		if(event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_LEFT ){
 			int current = vv_video.getCurrentPosition();
@@ -301,7 +326,7 @@ public class player extends Activity {
 				MainActivity.outPlayer = true;
 				finish(); 
 			}
-			return true;  
+			return true;
 		}
 		return super.onKeyDown(keyCode, event);
 	}
