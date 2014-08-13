@@ -113,7 +113,7 @@ public class player extends Activity {
 	    // 开始的提示框
         dialog = new ProgressDialog(this);
         dialog.setTitle("稍候");
-        dialog.setMessage("正在不要命地装载中...");
+        dialog.setMessage("正在玩命地加载中...");
         dialog.setCancelable(false);
         
         dialog.show();
@@ -143,8 +143,8 @@ public class player extends Activity {
 			public void run() {
 				Log.i(TAG, "指定视频源路径");
 				vv_video.setVideoPath(path_tmp);
-				smallAdPic = loadImageFromNetwork("http://202.104.110.178:8080/picture/small.png");
-				bigAdPic = loadImageFromNetwork("http://202.104.110.178:8080/picture/big.jpg");
+				smallAdPic = loadImageFromNetwork("http://202.104.110.178:8080/picture/small3.png");
+				bigAdPic = loadImageFromNetwork("http://202.104.110.178:8080/picture/big3.jpg");
 				dialog.dismiss();
 			}
 		}).start();
