@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,9 +19,12 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.BaseAdapter;
 import android.widget.Gallery;
 import android.widget.ImageView;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class MainActivity extends Activity {
 	public static boolean outPlayer = false;
+	public static JSONArray jsonArray;
 	
 	private int[] images_small_IDs = new int[] { 
 			R.drawable.walle_small,
@@ -76,6 +80,16 @@ public class MainActivity extends Activity {
 					startActivity(intent);
 				}
 				if(position == 1 ){
+
+					new Thread(new Runnable(){
+						public void run(){
+							JsonRec jsonRec = new JsonRec("202.104.110.178",10000);
+							jsonRec.connect("变形金刚3"); 
+							jsonArray = jsonRec.getJsonArray();
+							Log.i("json", " 广告数量为："+ jsonRec.getAdNum()); 
+						}
+					}).start();
+
 					Intent intent = new Intent(MainActivity.this, player.class);
 					intent.putExtra("url", "http://202.104.110.178:8080/video/变形金刚3.mp4");
 					startActivity(intent);

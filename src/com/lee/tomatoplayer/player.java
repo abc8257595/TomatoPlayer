@@ -30,6 +30,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 
 public class player extends Activity {
 	private final String TAG = "main";
@@ -141,10 +144,18 @@ public class player extends Activity {
 		
 		new Thread(new Runnable() {
 			public void run() {
+			    String tv1 = null;  //tv1是大图
+			    String tv2 = null;  //tv2是小图
 				Log.i(TAG, "指定视频源路径");
 				vv_video.setVideoPath(path_tmp);
-				smallAdPic = loadImageFromNetwork("http://202.104.110.178:8080/picture/small3.png");
-				bigAdPic = loadImageFromNetwork("http://202.104.110.178:8080/picture/big3.jpg");
+				try {
+					tv1 = MainActivity.jsonArray.getJSONObject(1).getString("tv1");
+					tv2 = MainActivity.jsonArray.getJSONObject(1).getString("phone1");
+					//litAdTime = MainActivity.jsonArray.getJSONObject(0).getString("admoment");
+				}catch (Exception e) {
+				}
+				smallAdPic = loadImageFromNetwork(tv2);
+				bigAdPic = loadImageFromNetwork(tv1);
 				dialog.dismiss();
 			}
 		}).start();
