@@ -1,5 +1,7 @@
 package com.lee.tomatoplayer;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -30,9 +32,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 
 public class player extends Activity {
 	private final String TAG = "main";
@@ -61,11 +60,17 @@ public class player extends Activity {
 	
 	private ImageView littleAD;
 	private ImageView bigAD;
-	private Bitmap smallAdPic;
-	private Bitmap bigAdPic;
-	private int litAdTime; 
+	//TODO
+//	private Bitmap smallAdPic;
+//	private Bitmap bigAdPic;
+//	private long litAdTime;
+	private static Bitmap [] smallAdPic = new Bitmap [MainActivity.adNum];
+	private static Bitmap [] bigAdPic = new Bitmap [MainActivity.adNum];
+	private long [] litAdTime = new long [MainActivity.adNum]; 
 	private int AdLastTime;
 	private int AdAlpha = 100;
+	private static boolean firstSetWhichAd;
+	private static int whichAd = 0;
 	
     private static Handler handler ;
 	
@@ -89,7 +94,6 @@ public class player extends Activity {
 		
 		// 专门用于控制主线程的UI组件
 		handler = new Handler() {
-	        // TODO
 	        public void handleMessage(android.os.Message msg) {
 	            if (msg.what == PLAY_TO) {
 	        		progressBar.setVisibility(View.VISIBLE);
@@ -98,7 +102,8 @@ public class player extends Activity {
 	            } else if(msg.what == IS_PAUSE){
 	            	progressBar.setVisibility(View.VISIBLE);
 					playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_pause)));
-					bigAD.setImageBitmap(bigAdPic);
+//					bigAD.setImageBitmap(bigAdPic[whichAd]); TODO
+					bigAD.setImageBitmap(bigAdPic[whichAd]);
 					bigAD.setVisibility(View.VISIBLE);
 					littleAD.setVisibility(View.GONE);
 	            }else if(msg.what == IS_CONTINUE){
@@ -130,7 +135,6 @@ public class player extends Activity {
 		firstPlay = true;
 		
 		// 广告设置位
-		litAdTime = 10000;
 		AdLastTime = 5000;
 		//AdAlpha = 50;
 	}
@@ -144,18 +148,86 @@ public class player extends Activity {
 		
 		new Thread(new Runnable() {
 			public void run() {
-			    String tv1 = null;  //tv1是大图
-			    String tv2 = null;  //tv2是小图
+				// TODO
+				int ADnum = MainActivity.adNum;
+			    String [] tv1 = new String [ADnum];  //tv1是大图
+			    String [] tv2 = new String [ADnum];  //tv2是小图
+			    String [] litAdTime_String = new String [ADnum]; //广告时间点
+//				String tv1 = null;
+//				String tv2 = null;
+//				String litAdTime_String;
+				
 				Log.i(TAG, "指定视频源路径");
 				vv_video.setVideoPath(path_tmp);
-				try {
-					tv1 = MainActivity.jsonArray.getJSONObject(1).getString("tv1");
-					tv2 = MainActivity.jsonArray.getJSONObject(1).getString("phone1");
-					//litAdTime = MainActivity.jsonArray.getJSONObject(0).getString("admoment");
-				}catch (Exception e) {
+//				smallAdPic = new Bitmap [ADnum];
+//				bigAdPic = new Bitmap [ADnum];
+//				litAdTime = new long [ADnum];
+//				try {
+					for(int i=0;i<ADnum;i++){
+						try{
+							tv1[i] = MainActivity.jsonArray.getJSONObject(i).getString("tv1");
+							tv2[i] = MainActivity.jsonArray.getJSONObject(i).getString("tv2");
+							Log.i("json",tv1[i]);
+							// 取得广告时间点,将字符串转为毫秒值
+							litAdTime_String[i] = MainActivity.jsonArray.getJSONObject(i).getString("admoment");
+							SimpleDateFormat formatter=new SimpleDateFormat("mm:ss");
+							Date date = formatter.parse(litAdTime_String[i]);  
+							Log.i("json",litAdTime_String[i]);
+//							litAdTime[i] = date.getMinutes()*60*1000 + date.getSeconds()*1000;
+							litAdTime[i] = date.getMinutes()*60*1000 + date.getSeconds()*1000 - 2000;
+						}catch (Exception e) {
+							Log.i("json","error");
+						}
+//						tv1[i] = MainActivity.jsonArray.getJSONObject(i).getString("tv1");
+//						tv2[i] = MainActivity.jsonArray.getJSONObject(i).getString("tv2");
+//						
+//						// 取得广告时间点,将字符串转为毫秒值
+//						litAdTime_String[i] = MainActivity.jsonArray.getJSONObject(i).getString("admoment");
+//						SimpleDateFormat formatter=new SimpleDateFormat("mm:ss");
+//						Date date = formatter.parse(litAdTime_String[1]);  
+//						Log.i("json",litAdTime_String[i]);
+////						litAdTime[i] = date.getMinutes()*60*1000 + date.getSeconds()*1000;
+//						litAdTime = date.getMinutes()*60*1000 + date.getSeconds()*1000;
+						
+					}
+						
+//					tv1 = MainActivity.jsonArray.getJSONObject(1).getString("tv1");
+//					tv2 = MainActivity.jsonArray.getJSONObject(1).getString("tv2");
+//					
+//					// 取得广告时间点,将字符串转为毫秒值 
+//					litAdTime_String = MainActivity.jsonArray.getJSONObject(1).getString("admoment");
+//					Log.i("json",litAdTime_String);
+//					SimpleDateFormat formatter=new SimpleDateFormat("mm:ss");
+////					Date date = formatter.parse(litAdTime_String[0]); 
+//					Date date = formatter.parse(litAdTime_String);
+//					litAdTime = date.getMinutes()*60*1000 + date.getSeconds()*1000;
+						
+//				}catch (Exception e) {
+//					Log.i("json","error");
+//				}
+						
+//				for(int i=0;i<ADnum;i++){
+//					new Thread(new Runnable(){
+//						public void run() {
+//							smallAdPic[i] = loadImageFromNetwork(tv2[i]);
+//							bigAdPic[i] = loadImageFromNetwork(tv1[i]);
+//						}
+//					}).start();
+//				}
+					
+				for(int i=0;i<ADnum;i++){
+					smallAdPic[i] = loadImageFromNetwork(tv2[i]); 
+					bigAdPic[i] = loadImageFromNetwork(tv1[i]);
 				}
-				smallAdPic = loadImageFromNetwork(tv2);
-				bigAdPic = loadImageFromNetwork(tv1);
+//				smallAdPic[0] = loadImageFromNetwork(tv2[0]); 
+//				bigAdPic = loadImageFromNetwork(tv1[0]);
+//				smallAdPic[0] = loadImageFromNetwork("http://202.104.110.178:8080/picture/small1.png"); 
+//				bigAdPic[0] = loadImageFromNetwork("http://202.104.110.178:8080/picture/big1.jpg");
+				
+				
+//				smallAdPic[1] = loadImageFromNetwork(tv2[2]);
+//				bigAdPic[1] = loadImageFromNetwork(tv1[2]);
+				
 				dialog.dismiss();
 			}
 		}).start();
@@ -194,7 +266,6 @@ public class player extends Activity {
 	
 	// 跳转到某一msec时刻
 	protected void playTo(int msec){
-		// TODO
 		vv_video.seekTo(msec);
 		handler.sendEmptyMessage(PLAY_TO);
 	}
@@ -214,12 +285,6 @@ public class player extends Activity {
 			public void run() {
 				
 				handler.sendEmptyMessage(SEEKBAR_CHANGE);
-//				seekBar.post(new Runnable() {	
-//					public void run() {
-//						int current = vv_video.getCurrentPosition();
-//						seekBar.setProgress(current);
-//					}
-//				});
 				
 				currentTime.post(new Runnable(){
 					public void run(){
@@ -231,21 +296,34 @@ public class player extends Activity {
 				});
 				
 				littleAD.post(new Runnable(){
+					//TODO
 					public void run() {
-						if(vv_video.getCurrentPosition() > litAdTime && 
-						   vv_video.getCurrentPosition() < (litAdTime + AdLastTime)	){
+						if(vv_video.getCurrentPosition() > litAdTime[whichAd] && 
+						   vv_video.getCurrentPosition() < (litAdTime[whichAd] + AdLastTime)	){
+							if(firstSetWhichAd){
+								firstSetWhichAd = false;			
+								littleAD.setImageBitmap(smallAdPic[whichAd]);
+//								whichAd ++;
+								Log.i("json",String.valueOf(whichAd));
+							}
 							littleAD.setVisibility(View.VISIBLE);
-							littleAD.setImageBitmap(smallAdPic);
+							//littleAD.setImageBitmap(smallAdPic);
 							AdAlpha += 40;
 							if(AdAlpha >=250 ) AdAlpha = 250 ;
 							littleAD.setAlpha(AdAlpha);
 						} else{
+							firstSetWhichAd = true;
 							AdAlpha -= 40;
 							if(AdAlpha <= 0) {
 								AdAlpha = 0;
 								littleAD.setVisibility(View.GONE);
 							}
 							littleAD.setAlpha(AdAlpha);
+						}
+						
+						if(vv_video.getCurrentPosition() > (litAdTime[whichAd] + AdLastTime)){
+							if(whichAd < MainActivity.adNum - 1)
+								whichAd ++;
 						}
 					}
 				}); 
