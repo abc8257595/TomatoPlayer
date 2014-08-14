@@ -34,6 +34,7 @@ import android.widget.VideoView;
 
 
 public class player extends Activity {
+	// 常量区
 	private final String TAG = "main";
 	private final int IS_PAUSE = 1;
 	private final int PLAY_TO = 2;
@@ -41,38 +42,37 @@ public class player extends Activity {
 	private final int FIRST_PLAY = 4;
 	private final int SEEKBAR_CHANGE = 5;
 	
+	// 控件区
 	private SeekBar seekBar;
 	private TextView duration;
 	private TextView currentTime;
 	private static ImageView playBtn;
 	private ProgressDialog dialog;
-	
 	private static LinearLayout progressBar;
 	private VideoView vv_video;
+	private ActionBar mActionBar;
+	
+	// 标识区
 	private boolean isPlaying;
 	private boolean firstPlay;
-	private ActionBar mActionBar;
-	private long waitTime = 5000;  
+	private long waitTime = 5000;  	// 5s内按两次返回退出机制
 	private long touchTime = 0;  
 	
 	private Timer mTimer; 
 	private TimerTask mTimerTask;
+    private static Handler handler ;
 	
+	// 广告图片区
 	private ImageView littleAD;
 	private ImageView bigAD;
-	//TODO
-//	private Bitmap smallAdPic;
-//	private Bitmap bigAdPic;
-//	private long litAdTime;
-	private static Bitmap [] smallAdPic = new Bitmap [MainActivity.adNum];
-	private static Bitmap [] bigAdPic = new Bitmap [MainActivity.adNum];
-	private long [] litAdTime = new long [MainActivity.adNum]; 
-	private int AdLastTime;
-	private int AdAlpha = 100;
-	private static boolean firstSetWhichAd;
+	private static Bitmap [] smallAdPic = new Bitmap [MainActivity.adNum]; // 大广告图片
+	private static Bitmap [] bigAdPic = new Bitmap [MainActivity.adNum];   // 小广告图片
+	private long [] litAdTime = new long [MainActivity.adNum]; 				// 广告所在时间点
+	private int AdLastTime = 5000;			// 广告延时
+	private int AdAlpha = 100;		// 广告初始透明度
+	private static boolean firstSetWhichAd;		
 	private static int whichAd = 0;
 	
-    private static Handler handler ;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +83,7 @@ public class player extends Activity {
 		mActionBar=getActionBar();
 		mActionBar.hide();
 
+		// 通过ID号找到控件
 		seekBar = (SeekBar) findViewById(R.id.seekBar);
 		vv_video = (VideoView) findViewById(R.id.vv_videoview);
 		progressBar = (LinearLayout) findViewById(R.id.progressBar);   // 整个LinearLayout 含暂停、时间、进度条
@@ -95,139 +96,96 @@ public class player extends Activity {
 		// 专门用于控制主线程的UI组件
 		handler = new Handler() {
 	        public void handleMessage(android.os.Message msg) {
-	            if (msg.what == PLAY_TO) {
+	            // 按'左右快进退'时显示 进度条、换成播放图标、大广告隐藏
+	        	if (msg.what == PLAY_TO) {
 	        		progressBar.setVisibility(View.VISIBLE);
 	        		bigAD.setVisibility(View.INVISIBLE);
 	        		playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_play)));
-	            } else if(msg.what == IS_PAUSE){
+	            } // 按'暂停'时显示进度条、换成暂停图标、设置大广告图片、显示大广告、隐藏小广告 
+	        	else if(msg.what == IS_PAUSE){
 	            	progressBar.setVisibility(View.VISIBLE);
 					playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_pause)));
-//					bigAD.setImageBitmap(bigAdPic[whichAd]); TODO
 					bigAD.setImageBitmap(bigAdPic[whichAd]);
 					bigAD.setVisibility(View.VISIBLE);
 					littleAD.setVisibility(View.GONE);
-	            }else if(msg.what == IS_CONTINUE){
+	            } // 按'继续播放'时隐藏进度条、换成播放图标、隐藏大广告
+	        	else if(msg.what == IS_CONTINUE){
 	            	progressBar.setVisibility(View.INVISIBLE);
 					playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_play)));
 					bigAD.setVisibility(View.INVISIBLE);
-	            }else if(msg.what == FIRST_PLAY){
+	            } // 特别设置的第一次播放，只切换播放图标，不隐藏进度条
+	        	else if(msg.what == FIRST_PLAY){
 	            	playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_play)));
-	        	}else if(msg.what == SEEKBAR_CHANGE){
+	        	} // 每500ms接收到一个同步播放条信号
+	        	else if(msg.what == SEEKBAR_CHANGE){
 	        		seekBar.setProgress(vv_video.getCurrentPosition());
 	        	}
 	        };
 	    };
 		
-	    // 开始的提示框
+	    // 开始的提示框，不可以返回取消
         dialog = new ProgressDialog(this);
         dialog.setTitle("稍候");
         dialog.setMessage("正在玩命地加载中...");
         dialog.setCancelable(false);
-        
         dialog.show();
         
-		// prepare提前载入流媒体url地址
-		Log.i(TAG, " 获取视频文件地址");
+		// prepare提前载入流媒体url地址，接收上一个activity传进来的url字符串
 		Intent intent =getIntent();
 		prepare(intent.getStringExtra("url"));
 		
-		// 第一次播放标志位
-		firstPlay = true;
-		
-		// 广告设置位
-		AdLastTime = 5000;
-		//AdAlpha = 50;
 	}
 	
 	// 预设置播放路径
 	private void prepare(String path){
 		
+		// 为了传值进new Thread的无奈之举，后期肯定要改 TODO
 		final String path_tmp = path;
+		// 准备阶段先隐藏好大小广告位
 		littleAD.setVisibility(View.INVISIBLE);
 		bigAD.setVisibility(View.INVISIBLE);
 		
+		// 第一次播放标志位
+		firstPlay = true;
+		
+		// 开始一个新的下载广告图片的进程
 		new Thread(new Runnable() {
 			public void run() {
-				// TODO
+				// ADnum是从上个activity传进来的广告数量
 				int ADnum = MainActivity.adNum;
-			    String [] tv1 = new String [ADnum];  //tv1是大图
-			    String [] tv2 = new String [ADnum];  //tv2是小图
-			    String [] litAdTime_String = new String [ADnum]; //广告时间点
-//				String tv1 = null;
-//				String tv2 = null;
-//				String litAdTime_String;
+			    String [] tv1 = new String [ADnum];  //tv1是大图 数组
+			    String [] tv2 = new String [ADnum];  //tv2是小图 数组
+			    String [] litAdTime_String = new String [ADnum]; //广告时间点 数组
 				
 				Log.i(TAG, "指定视频源路径");
 				vv_video.setVideoPath(path_tmp);
-//				smallAdPic = new Bitmap [ADnum];
-//				bigAdPic = new Bitmap [ADnum];
-//				litAdTime = new long [ADnum];
-//				try {
-					for(int i=0;i<ADnum;i++){
-						try{
-							tv1[i] = MainActivity.jsonArray.getJSONObject(i).getString("tv1");
-							tv2[i] = MainActivity.jsonArray.getJSONObject(i).getString("tv2");
-							Log.i("json",tv1[i]);
-							// 取得广告时间点,将字符串转为毫秒值
-							litAdTime_String[i] = MainActivity.jsonArray.getJSONObject(i).getString("admoment");
-							SimpleDateFormat formatter=new SimpleDateFormat("mm:ss");
-							Date date = formatter.parse(litAdTime_String[i]);  
-							Log.i("json",litAdTime_String[i]);
-//							litAdTime[i] = date.getMinutes()*60*1000 + date.getSeconds()*1000;
-							litAdTime[i] = date.getMinutes()*60*1000 + date.getSeconds()*1000 - 2000;
-						}catch (Exception e) {
-							Log.i("json","error");
-						}
-//						tv1[i] = MainActivity.jsonArray.getJSONObject(i).getString("tv1");
-//						tv2[i] = MainActivity.jsonArray.getJSONObject(i).getString("tv2");
-//						
-//						// 取得广告时间点,将字符串转为毫秒值
-//						litAdTime_String[i] = MainActivity.jsonArray.getJSONObject(i).getString("admoment");
-//						SimpleDateFormat formatter=new SimpleDateFormat("mm:ss");
-//						Date date = formatter.parse(litAdTime_String[1]);  
-//						Log.i("json",litAdTime_String[i]);
-////						litAdTime[i] = date.getMinutes()*60*1000 + date.getSeconds()*1000;
-//						litAdTime = date.getMinutes()*60*1000 + date.getSeconds()*1000;
-						
+				
+				// 从jsonArray获得url数据
+				for(int i=0;i<ADnum;i++){
+					// 一定要try catch 否则会报错
+					try{
+						// 获得大小广告url地址，还没有下载
+						tv1[i] = MainActivity.jsonArray.getJSONObject(i).getString("tv1");
+						tv2[i] = MainActivity.jsonArray.getJSONObject(i).getString("tv2");
+						Log.i("json",tv1[i]);
+						// 取得广告时间点,将字符串转为毫秒值
+						litAdTime_String[i] = MainActivity.jsonArray.getJSONObject(i).getString("admoment");
+						SimpleDateFormat formatter=new SimpleDateFormat("mm:ss");
+						Date date = formatter.parse(litAdTime_String[i]);  
+						Log.i("json",litAdTime_String[i]);
+						litAdTime[i] = date.getMinutes()*60*1000 + date.getSeconds()*1000 - 2000; // 减2000是提前跳出小广告
+					}catch (Exception e) {
+						Log.i("json","error");
 					}
-						
-//					tv1 = MainActivity.jsonArray.getJSONObject(1).getString("tv1");
-//					tv2 = MainActivity.jsonArray.getJSONObject(1).getString("tv2");
-//					
-//					// 取得广告时间点,将字符串转为毫秒值 
-//					litAdTime_String = MainActivity.jsonArray.getJSONObject(1).getString("admoment");
-//					Log.i("json",litAdTime_String);
-//					SimpleDateFormat formatter=new SimpleDateFormat("mm:ss");
-////					Date date = formatter.parse(litAdTime_String[0]); 
-//					Date date = formatter.parse(litAdTime_String);
-//					litAdTime = date.getMinutes()*60*1000 + date.getSeconds()*1000;
-						
-//				}catch (Exception e) {
-//					Log.i("json","error");
-//				}
-						
-//				for(int i=0;i<ADnum;i++){
-//					new Thread(new Runnable(){
-//						public void run() {
-//							smallAdPic[i] = loadImageFromNetwork(tv2[i]);
-//							bigAdPic[i] = loadImageFromNetwork(tv1[i]);
-//						}
-//					}).start();
-//				}
-					
+				}
+				
+				// 另起一个for循环下载广告图片到内存中
 				for(int i=0;i<ADnum;i++){
 					smallAdPic[i] = loadImageFromNetwork(tv2[i]); 
 					bigAdPic[i] = loadImageFromNetwork(tv1[i]);
 				}
-//				smallAdPic[0] = loadImageFromNetwork(tv2[0]); 
-//				bigAdPic = loadImageFromNetwork(tv1[0]);
-//				smallAdPic[0] = loadImageFromNetwork("http://202.104.110.178:8080/picture/small1.png"); 
-//				bigAdPic[0] = loadImageFromNetwork("http://202.104.110.178:8080/picture/big1.jpg");
 				
-				
-//				smallAdPic[1] = loadImageFromNetwork(tv2[2]);
-//				bigAdPic[1] = loadImageFromNetwork(tv1[2]);
-				
+				// 下载完隐藏弹出框
 				dialog.dismiss();
 			}
 		}).start();
@@ -284,8 +242,10 @@ public class player extends Activity {
 		mTimerTask = new TimerTask() {
 			public void run() {
 				
+				// 发送更新 单纯的播放栏 信号
 				handler.sendEmptyMessage(SEEKBAR_CHANGE);
 				
+				// 更新影片播放时间TextView
 				currentTime.post(new Runnable(){
 					public void run(){
 						int dur = vv_video.getDuration();
@@ -295,23 +255,26 @@ public class player extends Activity {
 					}
 				});
 				
+				// 监听小广告是否到点弹出
 				littleAD.post(new Runnable(){
-					//TODO
 					public void run() {
+						// 在小广告持续时间内有渐显效果
 						if(vv_video.getCurrentPosition() > litAdTime[whichAd] && 
 						   vv_video.getCurrentPosition() < (litAdTime[whichAd] + AdLastTime)	){
 							if(firstSetWhichAd){
+								// TODO 第一次进入时更改图片，还需再优化
 								firstSetWhichAd = false;			
 								littleAD.setImageBitmap(smallAdPic[whichAd]);
-//								whichAd ++;
 								Log.i("json",String.valueOf(whichAd));
 							}
 							littleAD.setVisibility(View.VISIBLE);
-							//littleAD.setImageBitmap(smallAdPic);
+							
+							// 渐显效果
 							AdAlpha += 40;
 							if(AdAlpha >=250 ) AdAlpha = 250 ;
 							littleAD.setAlpha(AdAlpha);
-						} else{
+						} // 其它时间小广告渐陷 
+						else{
 							firstSetWhichAd = true;
 							AdAlpha -= 40;
 							if(AdAlpha <= 0) {
@@ -321,6 +284,7 @@ public class player extends Activity {
 							littleAD.setAlpha(AdAlpha);
 						}
 						
+						// 更新whichAd TODO
 						if(vv_video.getCurrentPosition() > (litAdTime[whichAd] + AdLastTime)){
 							if(whichAd < MainActivity.adNum - 1)
 								whichAd ++;
@@ -349,6 +313,7 @@ public class player extends Activity {
 			}
 		});
 	}
+	
 	
 	// 重新播放
 	protected void replay() {
