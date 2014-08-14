@@ -53,7 +53,6 @@ public class player extends Activity {
 	private ActionBar mActionBar;
 	
 	// 标识区
-	private boolean isPlaying;
 	private boolean firstPlay;
 	private long waitTime = 5000;  	// 5s内按两次返回退出机制
 	private long touchTime = 0;  
@@ -308,7 +307,6 @@ public class player extends Activity {
 		vv_video.setOnErrorListener(new OnErrorListener() {
 			public boolean onError(MediaPlayer mp, int what, int extra) {
 				play(0);
-				isPlaying = false;
 				return false;
 			}
 		});
@@ -322,7 +320,6 @@ public class player extends Activity {
 			Toast.makeText(this, "重新播放", Toast.LENGTH_SHORT).show();
 			return;
 		}
-		isPlaying = false;
 		play(0);
 	}
 	
@@ -330,7 +327,6 @@ public class player extends Activity {
 	protected void stop() {
 		if (vv_video != null && vv_video.isPlaying()) {
 			vv_video.stopPlayback();
-			isPlaying = false;
 		}
 	}
 	
