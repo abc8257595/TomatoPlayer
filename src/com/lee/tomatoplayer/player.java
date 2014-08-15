@@ -69,7 +69,7 @@ public class player extends Activity {
 	private long [] litAdTime = new long [MainActivity.adNum]; 				// 广告所在时间点
 	private int AdLastTime = 5000;			// 广告延时
 	private int AdAlpha = 100;		// 广告初始透明度
-	private static boolean firstSetWhichAd;		
+	private static boolean firstSetLitAd;		
 	private static int whichAd = 0;
 	
 	
@@ -260,13 +260,13 @@ public class player extends Activity {
 						// 在小广告持续时间内有渐显效果
 						if(vv_video.getCurrentPosition() > litAdTime[whichAd] && 
 						   vv_video.getCurrentPosition() < (litAdTime[whichAd] + AdLastTime)	){
-							if(firstSetWhichAd){
+							if(firstSetLitAd){
 								// TODO 第一次进入时更改图片，还需再优化
-								firstSetWhichAd = false;			
+								firstSetLitAd = false;			
 								littleAD.setImageBitmap(smallAdPic[whichAd]);
+								littleAD.setVisibility(View.VISIBLE);
 								Log.i("json",String.valueOf(whichAd));
 							}
-							littleAD.setVisibility(View.VISIBLE);
 							
 							// 渐显效果
 							AdAlpha += 40;
@@ -274,23 +274,27 @@ public class player extends Activity {
 							littleAD.setAlpha(AdAlpha);
 						} // 其它时间小广告渐陷 
 						else{
-							firstSetWhichAd = true;
+							firstSetLitAd = true;
 							AdAlpha -= 40;
 							if(AdAlpha <= 0) {
 								AdAlpha = 0;
 								littleAD.setVisibility(View.GONE);
-							}
-							littleAD.setAlpha(AdAlpha);
-						}
-						
-						// 更新whichAd TODO
-						if(vv_video.getCurrentPosition() > (litAdTime[whichAd] + AdLastTime)){
-							if(whichAd < MainActivity.adNum - 1)
-								whichAd ++;
+							}else
+								littleAD.setAlpha(AdAlpha);
 						}
 					}
 				}); 
 				
+				// 更新whichAd TODO
+				if(vv_video.getCurrentPosition() > (litAdTime[whichAd] + AdLastTime)
+				&& whichAd < MainActivity.adNum - 1	){
+					whichAd ++;
+				}
+				if(whichAd >= 1){
+					if(vv_video.getCurrentPosition() < litAdTime[whichAd - 1]){
+						whichAd --;
+					}
+				}
 			}
 		}; 
 		// 每500ms执行一次定时器任务
