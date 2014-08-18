@@ -2,17 +2,12 @@ package com.lee.tomatoplayer;
 
 
 import org.json.JSONArray;
-
 import android.app.ActionBar;
 import android.app.Activity;
-import android.app.Service;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.res.TypedArray;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -27,10 +22,10 @@ import android.widget.Gallery;
 import android.widget.ImageView;
 
 public class MainActivity extends Activity {
-	public static boolean outPlayer = false;
 	public static JSONArray jsonArray;
 	public static int adNum;
 	
+	// gallery用到的7张固定小图
 	private int[] images_small_IDs = new int[] { 
 			R.drawable.walle_small,
 			R.drawable.transformer_small,	
@@ -40,6 +35,7 @@ public class MainActivity extends Activity {
 			R.drawable.laputa_small,
 			R.drawable.gravity_small
 	};
+	// gallery用到的7张固定大图
 	private int[] images_big_IDs = new int[]{  
 			 R.drawable.walle_big,
 			 R.drawable.transformer_big,
@@ -50,42 +46,23 @@ public class MainActivity extends Activity {
 			 R.drawable.gravity_big
 	};
 	private Gallery gallery;
-	private ImageView image;
+	private ImageView image;		// 用来显示电影大图
 	private ActionBar mActionBar;
 	
 	
-	//TODO
-	IBinderSer mService=null;
-    private ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mService = null;
-            Log.i("testmax", "!-Service Disconnected-!");
-        }
-
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            // 获取服务上的IBinder对象，调用IBinder对象中定义的自定义方法，获取Service对象
-        	Log.i("testmax", "--Service Connected--");
-            IBinderSer.LocalBinder binder=(IBinderSer.LocalBinder)service;
-            mService=binder.getService();
-        }
-    };
-	
-    
-    
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.welcome);
 		
-		// 全屏显示窗口
+		// 全屏显示窗口 TODO 让他一开始就是全屏
 		mActionBar=getActionBar();
 		mActionBar.hide();
 		gallery = (Gallery) findViewById(R.id.gallery);
 		image = (ImageView) findViewById(R.id.filmImage);
 		gallery.setAdapter(new ImageAdapter(MainActivity.this));
 		
+		// 选中小图时，大图自动切换
 		gallery.setOnItemSelectedListener(new OnItemSelectedListener() {
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view,
@@ -96,6 +73,7 @@ public class MainActivity extends Activity {
 			}
 		});
 		
+		// 点击小图时 跳转到对应的activity
 		gallery.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view,
@@ -108,41 +86,28 @@ public class MainActivity extends Activity {
 				if(position == 1 ){
 					new Thread(new Runnable(){
 						public void run(){
-							JsonRec jsonRec = new JsonRec("202.104.110.178",10000);
-							jsonRec.connect("变形金刚3"); 
-							jsonArray = jsonRec.getJsonArray();
-							adNum = jsonRec.getAdNum();
-							Log.i("json", " 广告数量为："+ adNum); 
+							try{
+								JsonRec jsonRec = new JsonRec("202.104.110.178",10000);
+								jsonRec.connect("变形金刚3"); 
+								jsonArray = jsonRec.getJsonArray();
+								adNum = jsonRec.getAdNum();
+								Log.i("json", " 广告数量为："+ adNum); 
+							}catch(Exception e){
+								Log.e("myerror", "Exception: "+Log.getStackTraceString(e));
+							}
 						}
 					}).start();
 
 					Intent intent = new Intent(MainActivity.this, player.class);
+					// 变形金刚的url
 					intent.putExtra("url", "http://202.104.110.178:8080/video/video.webm");
 					startActivity(intent);
 				}
 			}
 		});
-		
-		
-	    // 绑定service TODO
-//	    bindService(new Intent(MainActivity.this,IBinderSer.class),mConnection,Service.BIND_AUTO_CREATE); 
-//	    try{
-//	    	Log.i("testmax",String.valueOf(mService.getMultipleNum(10)));
-//	    }catch(Exception e){
-//	    	Log.i("testmax","error"); 
-//	    }
-	    //	    int testNum = mService.getMultipleNum(10);
-//	    Log.i("testmax",String.valueOf(testNum));
-//	    unbindService(mConnection);
-		
-		
-//		if(outPlayer == false){
-//			Intent intent = new Intent(MainActivity.this, player.class);
-//			startActivity(intent);
-//		}
-
 	}
 
+	
 	// 声明一个BaseAdapter
 	public class ImageAdapter extends BaseAdapter {
 		// 使用Adapter的上下文变量
