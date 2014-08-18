@@ -44,11 +44,11 @@ public class player extends Activity {
 	private final int IS_CONTINUE = 3;
 	private final int FIRST_PLAY = 4;
 	private final int SEEKBAR_CHANGE = 5;
-	private final String TYPE_AD = "1";
-	private final String TYPE_PLOT = "2";
-	private final String TYPE_ROLE = "3";
-	private final String TYPE_SPIT = "4";
-	private final String TYPE_REVIEW = "5";
+	private final int TYPE_AD = 1;
+	private final int TYPE_PLOT = 2;
+	private final int TYPE_ROLE = 3;
+	private final int TYPE_SPIT = 4;
+	private final int TYPE_REVIEW = 5;
 	private final int MAX_AD_NUM = 20;  //最多插20个点
 	
 	// 控件区
@@ -81,6 +81,7 @@ public class player extends Activity {
 	private int AdAlpha = 100;		// 广告初始透明度
 	private static boolean firstSetLitAd;		
 	private static int whichAd = 0;
+	private static int [] typeAd = new int [20];
 
 	
 	@Override
@@ -114,7 +115,10 @@ public class player extends Activity {
 	        	else if(msg.what == IS_PAUSE){
 	            	progressBar.setVisibility(View.VISIBLE);
 					playBtn.setImageDrawable((getResources().getDrawable(R.drawable.ic_media_pause)));
-					bigAD.setImageBitmap(bigAdPic[whichAd]);
+					if(typeAd[whichAd] == TYPE_AD || typeAd[whichAd] == TYPE_ROLE)
+						bigAD.setImageBitmap(bigAdPic[whichAd]);
+					else
+						bigAD.setImageDrawable(getResources().getDrawable(R.drawable.intro));
 					bigAD.setVisibility(View.VISIBLE);
 					littleAD.setVisibility(View.GONE);
 	            } // 按'继续播放'时隐藏进度条、换成播放图标、隐藏大广告
@@ -176,6 +180,7 @@ public class player extends Activity {
 						// 获得大小广告url地址，还没有下载
 						tv1[i] = MainActivity.jsonArray.getJSONObject(i).getString("tv1");
 						tv2[i] = MainActivity.jsonArray.getJSONObject(i).getString("tv2");
+						typeAd[i] = Integer.valueOf(MainActivity.jsonArray.getJSONObject(i).getString("type")).intValue();
 						//Log.i("json",tv1[i]);
 //						// 取得广告时间点,将字符串转为毫秒值 
 						litAdTime_String[i] = MainActivity.jsonArray.getJSONObject(i).getString("admoment");
@@ -190,32 +195,57 @@ public class player extends Activity {
 				
 				// 另起一个for循环下载广告图片到内存中
 				for(int i=0;i<ADnum;i++){
-					String type = null;
-					try{
-						type = MainActivity.jsonArray.getJSONObject(i).getString("type");
-						Log.i("json",type);
-					}catch (Exception e) {
-						Log.e("json", "Exception: "+Log.getStackTraceString(e));
-					}
+					Log.i("json",String.valueOf(typeAd[i]));
+					switch(typeAd[i]){
+						case TYPE_AD:
+							smallAdPic[i] = loadImageFromNetwork(tv2[i]); 
+							bigAdPic[i] = loadImageFromNetwork(tv1[i]);
+							break;
+						case TYPE_PLOT:
+							smallAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.plot2))).getBitmap();
+							bigAdPic[i] = null;
+							break;
+						case TYPE_ROLE:
+							smallAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.role3))).getBitmap();
+							bigAdPic[i] = loadImageFromNetwork(tv1[i]);
+							break;
+						case TYPE_SPIT:
+							smallAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.spit4))).getBitmap();
+							bigAdPic[i] = null;
+							break;
+						case TYPE_REVIEW:
+							smallAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.review5))).getBitmap();
+							bigAdPic[i] = null;
 							
-					if(type.equals(TYPE_AD))
-					{
-						smallAdPic[i] = loadImageFromNetwork(tv2[i]); 
-						bigAdPic[i] = loadImageFromNetwork(tv1[i]);
-					} else if(type.equals(TYPE_PLOT)){
-						smallAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.plot2))).getBitmap();
-						bigAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.plot2))).getBitmap();
-					} else if(type.equals(TYPE_ROLE))
-					{
-						smallAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.role3))).getBitmap();
-						bigAdPic[i] = loadImageFromNetwork(tv1[i]);
-					} else if(type.equals(TYPE_SPIT)){
-						smallAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.spit4))).getBitmap();
-						bigAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.plot2))).getBitmap();
-					} else if(type.equals(TYPE_REVIEW)){
-						smallAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.review5))).getBitmap();
-						bigAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.plot2))).getBitmap();
 					}
+					
+					
+//					String type = null;
+//					try{
+//						type = MainActivity.jsonArray.getJSONObject(i).getString("type");
+//						Log.i("json",type);
+//					}catch (Exception e) {
+//						Log.e("json", "Exception: "+Log.getStackTraceString(e));
+//					}
+							
+//					if(type.equals(TYPE_AD))
+//					{
+//						smallAdPic[i] = loadImageFromNetwork(tv2[i]); 
+//						bigAdPic[i] = loadImageFromNetwork(tv1[i]);
+//					} else if(type.equals(TYPE_PLOT)){
+//						smallAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.plot2))).getBitmap();
+//						bigAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.plot2))).getBitmap();
+//					} else if(type.equals(TYPE_ROLE))
+//					{
+//						smallAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.role3))).getBitmap();
+//						bigAdPic[i] = loadImageFromNetwork(tv1[i]);
+//					} else if(type.equals(TYPE_SPIT)){
+//						smallAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.spit4))).getBitmap();
+//						bigAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.plot2))).getBitmap();
+//					} else if(type.equals(TYPE_REVIEW)){
+//						smallAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.review5))).getBitmap();
+//						bigAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.plot2))).getBitmap();
+//					}
 
 				}
 				

@@ -26,8 +26,8 @@
     
         <ImageView
 	    android:id="@+id/bigAD"
-	    android:layout_width="975dp"
-	    android:layout_height="550dp"
+	    android:layout_width="1014dp"
+	    android:layout_height="572dp"
 	    android:scaleType="fitCenter"
 	    android:layout_gravity="center"
 	    android:padding="2dp"
