@@ -14,14 +14,19 @@ import org.apache.http.util.EntityUtils;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.app.Service;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -36,11 +41,16 @@ import android.widget.VideoView;
 public class player extends Activity {
 	// 常量区
 	private final String TAG = "main";
-	private final int IS_PAUSE = 1;
+	private final int IS_PAUSE = 1; 
 	private final int PLAY_TO = 2;
 	private final int IS_CONTINUE = 3;
 	private final int FIRST_PLAY = 4;
 	private final int SEEKBAR_CHANGE = 5;
+	private final String TYPE_AD = "1";
+	private final String TYPE_PLOT = "2";
+	private final String TYPE_ROLE = "3";
+	private final String TYPE_SPIT = "4";
+	private final String TYPE_REVIEW = "5";
 	
 	// 控件区
 	private SeekBar seekBar;
@@ -68,10 +78,28 @@ public class player extends Activity {
 	private static Bitmap [] bigAdPic = new Bitmap [MainActivity.adNum];   // 小广告图片
 	private long [] litAdTime = new long [MainActivity.adNum]; 				// 广告所在时间点
 	private int AdLastTime = 5000;			// 广告延时
+	private int AdAfterTime = 10000;		// 保证在广告点后10s还是显示那个广告
 	private int AdAlpha = 100;		// 广告初始透明度
 	private static boolean firstSetLitAd;		
 	private static int whichAd = 0;
 	
+	//TODO
+//	IBinderSer mService=null;
+//    private ServiceConnection mConnection = new ServiceConnection() {
+//        @Override
+//        public void onServiceDisconnected(ComponentName name) {
+//            mService = null;
+//            Log.i("testmax", "!-Service Disconnected-!");
+//        }
+//
+//        @Override
+//        public void onServiceConnected(ComponentName name, IBinder service) {
+//            // 获取服务上的IBinder对象，调用IBinder对象中定义的自定义方法，获取Service对象
+//        	Log.i("testmax", "--Service Connected--");
+//            IBinderSer.LocalBinder binder=(IBinderSer.LocalBinder)service;
+//            mService=binder.getService();
+//        }
+//    };
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -122,11 +150,17 @@ public class player extends Activity {
 	        };
 	    };
 		
+	    // 绑定service TODO
+//	    bindService(new Intent(player.this,IBinderSer.class),mConnection,Service.BIND_AUTO_CREATE); 
+//	    int testNum = mService.getMultipleNum(10);
+//	    Log.i("testmax",String.valueOf(testNum));
+//	    unbindService(mConnection);
+	    
 	    // 开始的提示框，不可以返回取消
         dialog = new ProgressDialog(this);
         dialog.setTitle("稍候");
         dialog.setMessage("正在玩命地加载中...");
-        dialog.setCancelable(false);
+        dialog.setCancelable(false); 
         dialog.show();
         
 		// prepare提前载入流媒体url地址，接收上一个activity传进来的url字符串
@@ -138,7 +172,7 @@ public class player extends Activity {
 	// 预设置播放路径
 	private void prepare(String path){
 		
-		// 为了传值进new Thread的无奈之举，后期肯定要改 TODO
+		// 为了传值进new Thread的无奈之举，后期肯定要改 
 		final String path_tmp = path;
 		// 准备阶段先隐藏好大小广告位
 		littleAD.setVisibility(View.INVISIBLE);
@@ -166,22 +200,55 @@ public class player extends Activity {
 						// 获得大小广告url地址，还没有下载
 						tv1[i] = MainActivity.jsonArray.getJSONObject(i).getString("tv1");
 						tv2[i] = MainActivity.jsonArray.getJSONObject(i).getString("tv2");
-						Log.i("json",tv1[i]);
+						//Log.i("json",tv1[i]);
 						// 取得广告时间点,将字符串转为毫秒值
 						litAdTime_String[i] = MainActivity.jsonArray.getJSONObject(i).getString("admoment");
+					}catch (Exception e) {
+						Log.i("json","json error");
+					}
+						
+					try{	
 						SimpleDateFormat formatter=new SimpleDateFormat("mm:ss");
 						Date date = formatter.parse(litAdTime_String[i]);  
-						Log.i("json",litAdTime_String[i]);
 						litAdTime[i] = date.getMinutes()*60*1000 + date.getSeconds()*1000 - 2000; // 减2000是提前跳出小广告
-					}catch (Exception e) {
-						Log.i("json","error");
+					}catch (Exception e){
+						Log.i("json","date error");
 					}
+						Log.i("json",litAdTime_String[i]);
+						
+//						litAdTime[i] += 10000;
+					
 				}
 				
 				// 另起一个for循环下载广告图片到内存中
 				for(int i=0;i<ADnum;i++){
-					smallAdPic[i] = loadImageFromNetwork(tv2[i]); 
-					bigAdPic[i] = loadImageFromNetwork(tv1[i]);
+					String type = null;
+					try{
+						type = MainActivity.jsonArray.getJSONObject(i).getString("type");
+						Log.i("json",type);
+					}catch (Exception e) {
+						Log.i("json","error2");
+					}
+							
+					if(type.equals(TYPE_AD))
+					{
+						smallAdPic[i] = loadImageFromNetwork(tv2[i]); 
+						bigAdPic[i] = loadImageFromNetwork(tv1[i]);
+					} else if(type.equals(TYPE_PLOT)){
+						smallAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.plot2))).getBitmap();
+						bigAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.plot2))).getBitmap();
+					} else if(type.equals(TYPE_ROLE))
+					{
+						smallAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.role3))).getBitmap();
+						bigAdPic[i] = loadImageFromNetwork(tv1[i]);
+					} else if(type.equals(TYPE_SPIT)){
+						smallAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.spit4))).getBitmap();
+						bigAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.plot2))).getBitmap();
+					} else if(type.equals(TYPE_REVIEW)){
+						smallAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.review5))).getBitmap();
+						bigAdPic[i] = ((BitmapDrawable)(getResources().getDrawable(R.drawable.plot2))).getBitmap();
+					}
+
 				}
 				
 				// 下载完隐藏弹出框
@@ -261,7 +328,7 @@ public class player extends Activity {
 						if(vv_video.getCurrentPosition() > litAdTime[whichAd] && 
 						   vv_video.getCurrentPosition() < (litAdTime[whichAd] + AdLastTime)	){
 							if(firstSetLitAd){
-								// TODO 第一次进入时更改图片，还需再优化
+								// 第一次进入时更改图片，还需再优化
 								firstSetLitAd = false;			
 								littleAD.setImageBitmap(smallAdPic[whichAd]);
 								littleAD.setVisibility(View.VISIBLE);
@@ -278,7 +345,7 @@ public class player extends Activity {
 							AdAlpha -= 40;
 							if(AdAlpha <= 0) {
 								AdAlpha = 0;
-								littleAD.setVisibility(View.GONE);
+//								littleAD.setVisibility(View.GONE);
 							}else
 								littleAD.setAlpha(AdAlpha);
 						}
@@ -286,10 +353,11 @@ public class player extends Activity {
 				}); 
 				
 				// 更新whichAd TODO
-				if(vv_video.getCurrentPosition() > (litAdTime[whichAd] + AdLastTime)
+				if(vv_video.getCurrentPosition() > (litAdTime[whichAd] + AdLastTime + AdAfterTime)
 				&& whichAd < MainActivity.adNum - 1	){
 					whichAd ++;
 				}
+				// 后退还可以看到广告的机制
 				if(whichAd >= 1){
 					if(vv_video.getCurrentPosition() < litAdTime[whichAd - 1]){
 						whichAd --;

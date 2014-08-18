@@ -1,12 +1,18 @@
 package com.lee.tomatoplayer;
 
 
+import org.json.JSONArray;
+
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.res.TypedArray;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -19,8 +25,6 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.BaseAdapter;
 import android.widget.Gallery;
 import android.widget.ImageView;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 public class MainActivity extends Activity {
 	public static boolean outPlayer = false;
@@ -49,6 +53,27 @@ public class MainActivity extends Activity {
 	private ImageView image;
 	private ActionBar mActionBar;
 	
+	
+	//TODO
+	IBinderSer mService=null;
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mService = null;
+            Log.i("testmax", "!-Service Disconnected-!");
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            // 获取服务上的IBinder对象，调用IBinder对象中定义的自定义方法，获取Service对象
+        	Log.i("testmax", "--Service Connected--");
+            IBinderSer.LocalBinder binder=(IBinderSer.LocalBinder)service;
+            mService=binder.getService();
+        }
+    };
+	
+    
+    
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -97,6 +122,19 @@ public class MainActivity extends Activity {
 				}
 			}
 		});
+		
+		
+	    // 绑定service TODO
+//	    bindService(new Intent(MainActivity.this,IBinderSer.class),mConnection,Service.BIND_AUTO_CREATE); 
+//	    try{
+//	    	Log.i("testmax",String.valueOf(mService.getMultipleNum(10)));
+//	    }catch(Exception e){
+//	    	Log.i("testmax","error"); 
+//	    }
+	    //	    int testNum = mService.getMultipleNum(10);
+//	    Log.i("testmax",String.valueOf(testNum));
+//	    unbindService(mConnection);
+		
 		
 //		if(outPlayer == false){
 //			Intent intent = new Intent(MainActivity.this, player.class);

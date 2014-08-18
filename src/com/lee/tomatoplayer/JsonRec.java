@@ -56,11 +56,12 @@ public class JsonRec {
         	   int byte_n = is.read(buf);
         	   
         	   // 打印每一条广告
-	     	   String str_tmp = new String(buf,0,byte_n);
-	     	   System.out.println(str_tmp + "\n");
+	     	   String str_tmp = new String(buf,0,byte_n,"UTF-8");
+	     	   //System.out.println(str_tmp + "\n");
 	     	   
 	     	   // string转为jsonObj,再组成jsonArray
 	     	   JSONObject jsonObj=new JSONObject(str_tmp);
+	     	   //if(jsonObj.getString("type")=="1" || jsonObj.getString("type")=="3")
 	     	   jsonArray.put(jsonObj);
 	 		   //发给服务器的确认信息
 	 		   os.write(SIGN.getBytes("UTF-8"));

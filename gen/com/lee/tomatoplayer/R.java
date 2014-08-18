@@ -35,10 +35,14 @@ public final class R {
         public static final int ic_media_play=0x7f02000a;
         public static final int laputa_big=0x7f02000b;
         public static final int laputa_small=0x7f02000c;
-        public static final int transformer_big=0x7f02000d;
-        public static final int transformer_small=0x7f02000e;
-        public static final int walle_big=0x7f02000f;
-        public static final int walle_small=0x7f020010;
+        public static final int plot2=0x7f02000d;
+        public static final int review5=0x7f02000e;
+        public static final int role3=0x7f02000f;
+        public static final int spit4=0x7f020010;
+        public static final int transformer_big=0x7f020011;
+        public static final int transformer_small=0x7f020012;
+        public static final int walle_big=0x7f020013;
+        public static final int walle_small=0x7f020014;
     }
     public static final class id {
         public static final int action_settings=0x7f08000a;
@@ -80,12 +84,6 @@ public final class R {
         AppBaseTheme from res/values/styles.xml on API 11+ devices.
     
  API 11 theme customizations can go here. 
-
-        Base application theme for API 14+. This theme completely replaces
-        AppBaseTheme from BOTH res/values/styles.xml and
-        res/values-v11/styles.xml on API 14+ devices.
-    
- API 14 theme customizations can go here. 
          */
         public static final int AppBaseTheme=0x7f060000;
         /**  Application theme. 

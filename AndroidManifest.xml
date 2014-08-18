@@ -26,6 +26,7 @@
             </intent-filter>
         </activity>
         <activity android:name="com.lee.tomatoplayer.player" />
+        <service android:name="com.lee.tomatoplayer.IBinderSer" />
     </application>
 
 </manifest>
