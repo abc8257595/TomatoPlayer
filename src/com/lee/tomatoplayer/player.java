@@ -179,15 +179,6 @@ public class player extends Activity {
 						//Log.i("json",tv1[i]);
 //						// 取得广告时间点,将字符串转为毫秒值 
 						litAdTime_String[i] = MainActivity.jsonArray.getJSONObject(i).getString("admoment");
-						
-//						String regEx="[^0-9]";
-//						Pattern p = Pattern.compile(regEx);
-//						Matcher m = p.matcher(litAdTime_String[i]);
-//						String result = m.replaceAll("");  
-//						int minute = Integer.valueOf(result).intValue()/100;
-//						int second = Integer.valueOf(result).intValue()%100;
-//						litAdTime[i] = minute*60*1000 + second*1000 -2000; 
-						
 						SimpleDateFormat formatter=new SimpleDateFormat("mm:ss");
 						Date date = formatter.parse(litAdTime_String[i]);
 						Log.i("json",litAdTime_String[i]);
@@ -310,6 +301,11 @@ public class player extends Activity {
 								littleAD.setImageBitmap(smallAdPic[whichAd]);
 								littleAD.setVisibility(View.VISIBLE);
 								Log.i("json",String.valueOf(whichAd));
+								try{
+									new SendMessage(MainActivity.jsonArray.getJSONObject(whichAd).toString(),"10.10.118.88").start();
+								}catch(Exception e){
+									Log.e("json", "Exception: "+Log.getStackTraceString(e));
+								}
 							}
 							
 							// 渐显效果

@@ -10,7 +10,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_weight="0.05"
-        android:animationDuration="2000"
+        android:animationDuration="500"
         android:layout_gravity="left"
         android:spacing="3dp"
         android:unselectedAlpha="0.5" />
