@@ -332,7 +332,7 @@ public class player extends Activity {
 								littleAD.setVisibility(View.VISIBLE);
 								Log.i("json",String.valueOf(whichAd));
 								try{
-									new SendMessage(MainActivity.jsonArray.getJSONObject(whichAd).toString(),"10.10.118.88").start();
+									new SendMessage(MainActivity.jsonArray.getJSONObject(whichAd).toString(),"10.10.118.88",30255).start();
 								}catch(Exception e){
 									Log.e("json", "Exception: "+Log.getStackTraceString(e));
 								}

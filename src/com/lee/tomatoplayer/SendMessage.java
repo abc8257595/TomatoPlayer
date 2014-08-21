@@ -16,11 +16,13 @@ class SendMessage extends Thread {
 		private String buffer = "";
 		public String message;
 		public String ipAdr;
+		public int port;
 		public Bundle bundle = new Bundle();
 
-		public SendMessage(String message,String ipAdr) {
+		public SendMessage(String message,String ipAdr,int port) {
 			this.message = message;
 			this.ipAdr = ipAdr;
+			this.port = port;
 		}
 		
 		public String getBundleMessage(){
@@ -35,7 +37,7 @@ class SendMessage extends Thread {
 			try {
 				//连接服务器 并设置连接超时为5秒
 				socket = new Socket();
-				socket.connect(new InetSocketAddress(ipAdr, 30000), 5000);
+				socket.connect(new InetSocketAddress(ipAdr, port), 5000);
 				//获取输入输出流
 				OutputStream ou = socket.getOutputStream();
 				BufferedReader bff = new BufferedReader(new InputStreamReader(
